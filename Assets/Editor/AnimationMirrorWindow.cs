@@ -163,13 +163,13 @@ public class AnimationMirrorWindow : EditorWindow
             for (int k = 0; k < originCurve.keys.Length; k++)
             {
                 if(rotationpos == 'x')
-                    destinyCurve.AddKey(originCurve.keys[k].time, Quaternion.Euler(ConvertArrayToEuler(destinyRotation, destinyPath, k)).x);
+                    destinyCurve.AddKey(originCurve.keys[k].time, destinyRotation[destinyPath][0][k]);
                 if (rotationpos == 'y')
-                    destinyCurve.AddKey(originCurve.keys[k].time, Quaternion.Euler(ConvertArrayToEuler(destinyRotation, destinyPath, k)).y);
+                    destinyCurve.AddKey(originCurve.keys[k].time, destinyRotation[destinyPath][1][k]);
                 if (rotationpos == 'z')
-                    destinyCurve.AddKey(originCurve.keys[k].time, Quaternion.Euler(ConvertArrayToEuler(destinyRotation, destinyPath, k)).z);
+                    destinyCurve.AddKey(originCurve.keys[k].time, destinyRotation[destinyPath][2][k]);
                 if (rotationpos == 'w')
-                    destinyCurve.AddKey(originCurve.keys[k].time, Quaternion.Euler(ConvertArrayToEuler(destinyRotation, destinyPath, k)).w);
+                    destinyCurve.AddKey(originCurve.keys[k].time, destinyRotation[destinyPath][3][k]);
             }
         }
         else 
@@ -191,7 +191,7 @@ public class AnimationMirrorWindow : EditorWindow
 
        // Debug.Log(originRotation[previousPath][0].Length + " " + originRotation[previousPath][3].Length);
 
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 4; i++)
         {
             int signo = 1;
             float[] array = new float[originRotation[previousPath][i].Length];
@@ -208,21 +208,28 @@ public class AnimationMirrorWindow : EditorWindow
                     origin = tPoseOrigin.x;
                     destiny = 0;//tPoseDestiny.x;
                     signo = 1;
-                    originAnimKey = quat.eulerAngles.x;
+                    originAnimKey = quat.x;
                 }
                 if (i == 1)
                 {
                     origin = tPoseOrigin.y;
                     destiny = 0;
                     signo = 1;
-                    originAnimKey = quat.eulerAngles.y;
+                    originAnimKey = quat.y;
                 }
                 if (i == 2)
                 {
                     origin = tPoseOrigin.z;
                     destiny = 0;
                     signo = 1;
-                    originAnimKey = quat.eulerAngles.z;
+                    originAnimKey = quat.z;
+                }
+                if (i == 3)
+                {
+                    origin = tPoseOrigin.z;
+                    destiny = 0;
+                    signo = 1;
+                    originAnimKey = quat.w;
                 }
                 //if (!previousPath.Contains("Left") && !previousPath.Contains("Right"))
                 {
