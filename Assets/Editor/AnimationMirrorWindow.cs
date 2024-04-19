@@ -214,14 +214,14 @@ public class AnimationMirrorWindow : EditorWindow
                 {
                     origin = tPoseOrigin.y;
                     destiny = 0;
-                    signo = 1;
+                    signo = -1;
                     originAnimKey = quat.y;
                 }
                 if (i == 2)
                 {
                     origin = tPoseOrigin.z;
                     destiny = 0;
-                    signo = 1;
+                    signo = -1;
                     originAnimKey = quat.z;
                 }
                 if (i == 3)
@@ -273,12 +273,12 @@ public class AnimationMirrorWindow : EditorWindow
                     
                     if (originInfo[i].path.Contains("Left"))
                     {
-                        //originInfo[i].path = originInfo[i].path.Replace("Left", "Right");
+                        originInfo[i].path = originInfo[i].path.Replace("Left", "Right");
                         //destinyPath = originInfo[i].path.Replace("Left", "Right");
                     }
                     else if (originInfo[i].path.Contains("Right"))
                     {
-                        //originInfo[i].path = originInfo[i].path.Replace("Right", "Left");
+                        originInfo[i].path = originInfo[i].path.Replace("Right", "Left");
                         //destinyPath = originInfo[i].path.Replace("Left", "Right");
                     }
                 }
@@ -286,7 +286,7 @@ public class AnimationMirrorWindow : EditorWindow
                 
                 if (originInfo[i].propertyName == "m_LocalPosition.x")
                 {
-                    SetKeysValue(previousPath, originInfo[i].path, ref destinyCurve, originCurve, ((GameObject)tpose.value).transform.Find(previousPath).localPosition.x, ((GameObject)tpose.value).transform.Find(originInfo[i].path).localPosition.x, 1);
+                    SetKeysValue(previousPath, originInfo[i].path, ref destinyCurve, originCurve, ((GameObject)tpose.value).transform.Find(previousPath).localPosition.x, ((GameObject)tpose.value).transform.Find(originInfo[i].path).localPosition.x, -1);
 
                 }
                 else if (originInfo[i].propertyName == "m_LocalPosition.y")
