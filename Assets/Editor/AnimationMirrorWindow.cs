@@ -14,7 +14,6 @@ using UnityEngine.UIElements;
 
 public class AnimationMirrorWindow : EditorWindow
 {
-    ObjectField tpose;
     ObjectField originAnimation;
     ObjectField destinyAnimation;
 
