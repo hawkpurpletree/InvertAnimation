@@ -28,13 +28,11 @@ public class AnimationMirrorWindow : EditorWindow
 
     public void CreateGUI()
     {
-        // Each editor window contains a root VisualElement object
         VisualElement root = rootVisualElement;
 
         Label label = new Label("");
         root.Add(label);
 
-        // VisualElements objects can contain other VisualElement following a tree hierarchy
         Label label2 = new Label("Invertir Animacion");
         StyleEnum<TextAnchor> align = new StyleEnum<TextAnchor>();
         align.value = TextAnchor.MiddleCenter;
@@ -73,7 +71,6 @@ public class AnimationMirrorWindow : EditorWindow
         tpose.label = "Prefab T-Pose";
         root.Add(tpose);
 
-        // Create button
         Button button = new Button();
         button.name = "invertir";
         button.text = "Invertir";
@@ -139,25 +136,8 @@ public class AnimationMirrorWindow : EditorWindow
         return quat;
     }
 
-    private Vector3 ConvertArrayToEuler(Dictionary<string, Dictionary<int, float[]>> rotationskeys, string path, int index)
+    public void SetKeysValue(string previousPath, string destinyPath, ref AnimationCurve destinyCurve, AnimationCurve originCurve,float tPoseOrigin, float tPoseDestiny, int signo, bool isQuaternion = false, Dictionary<string, Dictionary<int, float[]>> originRotation = null, Dictionary<string, Dictionary<int, float[]>> destinyRotation = null, char rotationpos = 'x') 
     {
-        Vector3 vec = new Vector3(rotationskeys.GetValueOrDefault(path).GetValueOrDefault(0)[index],
-        rotationskeys.GetValueOrDefault(path).GetValueOrDefault(1)[index],
-        rotationskeys.GetValueOrDefault(path).GetValueOrDefault(2)[index]);
-
-        return vec;
-    }
-    public void SetKeysValue(string previousPath, string destinyPath, ref AnimationCurve destinyCurve, AnimationCurve originCurve,float tPoseOrigin, float tPoseDestiny, int signo, bool isQuaternion = false, Dictionary<string, Dictionary<int, float[]>> originRotation = null, Dictionary<string, Dictionary<int, float[]>> destinyRotation = null, char rotationpos = 'x') {
-
-        tPoseDestiny = 0;
-        tPoseOrigin = 0;
-
-        if (!previousPath.Contains("Left") && !previousPath.Contains("Right"))
-        {
-            tPoseOrigin = 0;
-            tPoseDestiny = 0;
-        }
-
         if (isQuaternion)
         {
             for (int k = 0; k < originCurve.keys.Length; k++)
@@ -176,7 +156,7 @@ public class AnimationMirrorWindow : EditorWindow
         {
             for (int k = 0; k < originCurve.keys.Length; k++)
             {
-                destinyCurve.AddKey(originCurve.keys[k].time, tPoseDestiny + ((originCurve.keys[k].value  - tPoseOrigin) * signo));
+                destinyCurve.AddKey(originCurve.keys[k].time, originCurve.keys[k].value * signo);
             }
         }
         
@@ -189,8 +169,6 @@ public class AnimationMirrorWindow : EditorWindow
             destinyRotation.Add(destinyPath, new Dictionary<int, float[]>());
         }
 
-       // Debug.Log(originRotation[previousPath][0].Length + " " + originRotation[previousPath][3].Length);
-
         for (int i = 0; i < 4; i++)
         {
             int signo = 1;
@@ -201,43 +179,29 @@ public class AnimationMirrorWindow : EditorWindow
                 Quaternion quat = ConvertArrayToQuaternion(originRotation, previousPath, k);
 
                 float originAnimKey = 0;
-                float origin = 0;
-                float destiny = 0;
                 if (i == 0) 
                 {
-                    origin = tPoseOrigin.x;
-                    destiny = 0;//tPoseDestiny.x;
                     signo = 1;
                     originAnimKey = quat.x;
                 }
                 if (i == 1)
                 {
-                    origin = tPoseOrigin.y;
-                    destiny = 0;
                     signo = -1;
                     originAnimKey = quat.y;
                 }
                 if (i == 2)
                 {
-                    origin = tPoseOrigin.z;
-                    destiny = 0;
                     signo = -1;
                     originAnimKey = quat.z;
                 }
                 if (i == 3)
                 {
-                    origin = tPoseOrigin.w;
-                    destiny = 0;
                     signo = 1;
                     originAnimKey = quat.w;
                 }
-                //if (!previousPath.Contains("Left") && !previousPath.Contains("Right"))
-                {
-                    origin = 0;
-                    destiny = 0;
-                }
 
-                array[k] = destiny + ((originAnimKey - origin) * signo);
+
+                array[k] = originAnimKey * signo;
             }
             destinyRotation[destinyPath].Add(i, array);
         }
@@ -256,7 +220,6 @@ public class AnimationMirrorWindow : EditorWindow
         AnimationUtility.SetAnimationClipSettings((AnimationClip)destinyAnimation.value, settings);
 
         string previousPath = "";
-        string destinyPath = "";
         int wcount = 0;
         int xcount = 0;
         for (int i = 0; i < originInfo.Length; i++)
@@ -267,19 +230,16 @@ public class AnimationMirrorWindow : EditorWindow
                 AnimationCurve destinyCurve = new AnimationCurve();
 
                 previousPath = originInfo[i].path;
-                destinyPath = originInfo[i].path;
                 if (originInfo[i].path.Contains("Left") || originInfo[i].path.Contains("Right"))
                 {
                     
                     if (originInfo[i].path.Contains("Left"))
                     {
                         originInfo[i].path = originInfo[i].path.Replace("Left", "Right");
-                        //destinyPath = originInfo[i].path.Replace("Left", "Right");
                     }
                     else if (originInfo[i].path.Contains("Right"))
                     {
                         originInfo[i].path = originInfo[i].path.Replace("Right", "Left");
-                        //destinyPath = originInfo[i].path.Replace("Left", "Right");
                     }
                 }
                 
@@ -297,8 +257,6 @@ public class AnimationMirrorWindow : EditorWindow
                 }
                 else if (originInfo[i].propertyName == "m_LocalPosition.z")
                 {
-                    //Debug.Log(previousPath + ((GameObject)tpose.value).transform.Find(previousPath).localPosition.z + " " + ((GameObject)tpose.value).transform.Find(curvesinfo[i].path).localPosition.z);
-
                     SetKeysValue(previousPath, originInfo[i].path, ref destinyCurve, originCurve, ((GameObject)tpose.value).transform.Find(previousPath).localPosition.z, ((GameObject)tpose.value).transform.Find(originInfo[i].path).localPosition.z, 1);
 
                 }
@@ -330,14 +288,10 @@ public class AnimationMirrorWindow : EditorWindow
                     }
 
                 }
-                //estudiar cada hueso para rotacion
-                //estudiar hips y spine y neck
                 ((AnimationClip)destinyAnimation.value).SetCurve(originInfo[i].path, typeof(Transform), originInfo[i].propertyName, destinyCurve);
-                //AnimationUtility.SetEditorCurve((AnimationClip)destinyAnimation.value, originInfo[i], destinyCurve);
-                //Debug.Log(previousPath + " " + originInfo[i].path);
+
             }//if
         }//for
-        //Debug.Log(wcount + " " + xcount);
     }
 }
         
