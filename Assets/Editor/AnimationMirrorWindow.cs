@@ -54,23 +54,6 @@ public class AnimationMirrorWindow : EditorWindow
         destinyAnimation.label = "Animación destino";
         root.Add(destinyAnimation);
 
-        tpose = new ObjectField();
-        tpose.objectType = typeof(GameObject);
-        tpose.RegisterValueChangedCallback((obj) => {
-            if (PrefabUtility.GetPrefabAssetType(obj.newValue) == PrefabAssetType.Regular)
-            {
-                if (PrefabUtility.IsPartOfPrefabInstance(obj.newValue))
-                    tpose.value = PrefabUtility.GetOutermostPrefabInstanceRoot(obj.newValue);
-                else
-                    tpose.value = obj.newValue;
-            }
-            else
-                tpose.value = null;
-        });
-        tpose.name = "tpose";
-        tpose.label = "Prefab T-Pose";
-        root.Add(tpose);
-
         Button button = new Button();
         button.name = "invertir";
         button.text = "Invertir";
@@ -94,71 +77,63 @@ public class AnimationMirrorWindow : EditorWindow
     private void InvertAnimation()
     {
         EditorCurveBinding[] originInfo = AnimationUtility.GetCurveBindings((AnimationClip)originAnimation.value);
-        
-
         AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(((AnimationClip)originAnimation.value));
         AnimationUtility.SetAnimationClipSettings((AnimationClip)destinyAnimation.value, settings);
 
-        string previousPath = "";
         for (int i = 0; i < originInfo.Length; i++)
         {
-            if (((GameObject)tpose.value).transform.Find(originInfo[i].path) != null)
-            {
-                AnimationCurve originCurve = AnimationUtility.GetEditorCurve((AnimationClip)originAnimation.value, originInfo[i]);
-                AnimationCurve destinyCurve = new AnimationCurve();
+             AnimationCurve originCurve = AnimationUtility.GetEditorCurve((AnimationClip)originAnimation.value, originInfo[i]);
+             AnimationCurve destinyCurve = new AnimationCurve();
+              
+             if (originInfo[i].path.Contains("Left") || originInfo[i].path.Contains("Right"))
+             {
+                 if (originInfo[i].path.Contains("Left"))
+                 {
+                     originInfo[i].path = originInfo[i].path.Replace("Left", "Right");
+                 }
+                 else if (originInfo[i].path.Contains("Right"))
+                 {
+                     originInfo[i].path = originInfo[i].path.Replace("Right", "Left");
+                 }
+             }
+             
+             
+             if (originInfo[i].propertyName == "m_LocalPosition.x")
+             {
+                 SetKeysValue(ref destinyCurve, originCurve, -1);
 
-                previousPath = originInfo[i].path;
-                if (originInfo[i].path.Contains("Left") || originInfo[i].path.Contains("Right"))
-                {
-                    
-                    if (originInfo[i].path.Contains("Left"))
-                    {
-                        originInfo[i].path = originInfo[i].path.Replace("Left", "Right");
-                    }
-                    else if (originInfo[i].path.Contains("Right"))
-                    {
-                        originInfo[i].path = originInfo[i].path.Replace("Right", "Left");
-                    }
-                }
-                
-                
-                if (originInfo[i].propertyName == "m_LocalPosition.x")
-                {
-                    SetKeysValue(ref destinyCurve, originCurve, -1);
+             }
+             else if (originInfo[i].propertyName == "m_LocalPosition.y")
+             {
 
-                }
-                else if (originInfo[i].propertyName == "m_LocalPosition.y")
-                {
+                 SetKeysValue(ref destinyCurve, originCurve, 1);
 
-                    SetKeysValue(ref destinyCurve, originCurve, 1);
+             }
+             else if (originInfo[i].propertyName == "m_LocalPosition.z")
+             {
+                 SetKeysValue(ref destinyCurve, originCurve,  1);
 
-                }
-                else if (originInfo[i].propertyName == "m_LocalPosition.z")
-                {
-                    SetKeysValue(ref destinyCurve, originCurve,  1);
-
-                }
-                else if (originInfo[i].propertyName == "m_LocalRotation.x")
-                {
-                    SetKeysValue(ref destinyCurve, originCurve,  1);
-                }
-                else if (originInfo[i].propertyName == "m_LocalRotation.y")
-                {
-                    SetKeysValue(ref destinyCurve, originCurve, -1);
-                }
-                else if (originInfo[i].propertyName == "m_LocalRotation.z")
-                { 
-                    SetKeysValue(ref destinyCurve, originCurve, -1);
-                }
-                else if (originInfo[i].propertyName == "m_LocalRotation.w")
-                {
-                    SetKeysValue(ref destinyCurve, originCurve, 1);
-                }
+             }
+             else if (originInfo[i].propertyName == "m_LocalRotation.x")
+             {
+                 SetKeysValue(ref destinyCurve, originCurve,  1);
+             }
+             else if (originInfo[i].propertyName == "m_LocalRotation.y")
+             {
+                 SetKeysValue(ref destinyCurve, originCurve, -1);
+             }
+             else if (originInfo[i].propertyName == "m_LocalRotation.z")
+             { 
+                 SetKeysValue(ref destinyCurve, originCurve, -1);
+             }
+             else if (originInfo[i].propertyName == "m_LocalRotation.w")
+             {
+                 SetKeysValue(ref destinyCurve, originCurve, 1);
+             }
             
-               ((AnimationClip)destinyAnimation.value).SetCurve(originInfo[i].path, typeof(Transform), originInfo[i].propertyName, destinyCurve);
-               }//if
-            }//for
-        }
+            ((AnimationClip)destinyAnimation.value).SetCurve(originInfo[i].path, typeof(Transform), originInfo[i].propertyName, destinyCurve);
+        }//for
+    }
 }
         
 
