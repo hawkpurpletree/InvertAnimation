@@ -16,7 +16,7 @@ public class AnimationMirrorWindow : EditorWindow
 {
     ObjectField originAnimation;
     ObjectField destinyAnimation;
-
+    Toggle createNewAnimation;
 
     [MenuItem("PurpleTree/Animation Editor")]
     public static void ShowExample()
@@ -47,10 +47,17 @@ public class AnimationMirrorWindow : EditorWindow
         originAnimation.label = "Animación origen";
         root.Add(originAnimation);
 
+        createNewAnimation = new Toggle();
+        createNewAnimation.value = true;
+        createNewAnimation.label = "Crear animacion nueva";
+        createNewAnimation.RegisterValueChangedCallback((value) => destinyAnimation.visible = !value.newValue);
+        root.Add(createNewAnimation);
+
         destinyAnimation = new ObjectField();
         destinyAnimation.objectType = typeof(AnimationClip);
         destinyAnimation.name = "animacionDestino";
         destinyAnimation.label = "Animación destino";
+        destinyAnimation.visible = false;
         root.Add(destinyAnimation);
 
         Button button = new Button();
@@ -75,9 +82,23 @@ public class AnimationMirrorWindow : EditorWindow
 
     private void InvertAnimation()
     {
+        AnimationClip destinyAnimationClip;
+        if (createNewAnimation.value == true)
+        {
+            destinyAnimationClip = new AnimationClip();
+        }
+        else
+        {
+            destinyAnimationClip = (AnimationClip)destinyAnimation.value;
+        }
+
+        destinyAnimationClip.frameRate = ((AnimationClip)originAnimation.value).frameRate;
+
         EditorCurveBinding[] originInfo = AnimationUtility.GetCurveBindings((AnimationClip)originAnimation.value);
         AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(((AnimationClip)originAnimation.value));
-        AnimationUtility.SetAnimationClipSettings((AnimationClip)destinyAnimation.value, settings);
+        AnimationUtility.SetAnimationClipSettings(destinyAnimationClip, settings);
+        
+
 
         for (int i = 0; i < originInfo.Length; i++)
         {
@@ -130,8 +151,13 @@ public class AnimationMirrorWindow : EditorWindow
                  SetKeysValue(ref destinyCurve, originCurve, 1);
              }
             
-            ((AnimationClip)destinyAnimation.value).SetCurve(originInfo[i].path, typeof(Transform), originInfo[i].propertyName, destinyCurve);
+            destinyAnimationClip.SetCurve(originInfo[i].path, typeof(Transform), originInfo[i].propertyName, destinyCurve);
         }//for
+        if (createNewAnimation.value == true)
+        {
+            AssetDatabase.CreateAsset(destinyAnimationClip, AssetDatabase.GetAssetPath((AnimationClip)originAnimation.value).Replace(".anim", "_mirror.anim"));
+        }
+        
     }
 }
         
