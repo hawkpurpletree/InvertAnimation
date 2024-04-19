@@ -176,7 +176,7 @@ public class AnimationMirrorWindow : EditorWindow
         {
             for (int k = 0; k < originCurve.keys.Length; k++)
             {
-                destinyCurve.AddKey(originCurve.keys[k].time, tPoseOrigin + originCurve.keys[k].value * signo + tPoseDestiny);
+                destinyCurve.AddKey(originCurve.keys[k].time, tPoseDestiny + ((originCurve.keys[k].value  - tPoseOrigin) * signo));
             }
         }
         
@@ -237,8 +237,7 @@ public class AnimationMirrorWindow : EditorWindow
                     destiny = 0;
                 }
 
-
-                array[k] = origin + originAnimKey * signo + destiny;
+                array[k] = destiny + ((originAnimKey - origin) * signo);
             }
             destinyRotation[destinyPath].Add(i, array);
         }
