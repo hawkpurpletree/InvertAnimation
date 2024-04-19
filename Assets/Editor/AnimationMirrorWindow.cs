@@ -182,7 +182,7 @@ public class AnimationMirrorWindow : EditorWindow
         
     }
 
-    private void SavePositions(string previousPath,string destinyPath, AnimationCurve originCurve, Vector3 tPoseOrigin, Vector3 tPoseDestiny, Dictionary<string, Dictionary<int, float[]>> originRotation, ref Dictionary<string, Dictionary<int, float[]>> destinyRotation)
+    private void SavePositions(string previousPath,string destinyPath, AnimationCurve originCurve, Quaternion tPoseOrigin, Quaternion tPoseDestiny, Dictionary<string, Dictionary<int, float[]>> originRotation, ref Dictionary<string, Dictionary<int, float[]>> destinyRotation)
     {
         if (!destinyRotation.ContainsKey(destinyPath))
         {
@@ -226,7 +226,7 @@ public class AnimationMirrorWindow : EditorWindow
                 }
                 if (i == 3)
                 {
-                    origin = tPoseOrigin.z;
+                    origin = tPoseOrigin.w;
                     destiny = 0;
                     signo = 1;
                     originAnimKey = quat.w;
@@ -310,7 +310,7 @@ public class AnimationMirrorWindow : EditorWindow
                     if (!rotationSaved[previousPath]) 
                     { 
                         rotationSaved[previousPath] = true;
-                        SavePositions(previousPath, originInfo[i].path, originCurve, ((GameObject)tpose.value).transform.Find(previousPath).localRotation.eulerAngles, ((GameObject)tpose.value).transform.Find(originInfo[i].path).localRotation.eulerAngles, rotationOrigin, ref rotationDestiny);
+                        SavePositions(previousPath, originInfo[i].path, originCurve, ((GameObject)tpose.value).transform.Find(previousPath).localRotation, ((GameObject)tpose.value).transform.Find(originInfo[i].path).localRotation, rotationOrigin, ref rotationDestiny);
                     
                     }
 
