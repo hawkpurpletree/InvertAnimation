@@ -80,148 +80,26 @@ public class AnimationMirrorWindow : EditorWindow
     }
 
 
-    private void AddAllKeysToArray(int quaternionpos, int keyIndex, ref Dictionary<string, Dictionary<int, float[]>> rotationskeys, EditorCurveBinding[] curvesinfo, AnimationCurve animCurve)
+
+    public void SetKeysValue(ref AnimationCurve destinyCurve, AnimationCurve originCurve, int signo) 
     {
-        float[] array = new float[animCurve.keys.Length];
-        for (int j = 0; j < animCurve.keys.Length; j++)
-            array[j] = animCurve.keys[j].value;
-        rotationskeys[curvesinfo[keyIndex].path].Add(quaternionpos, array);
-    }
-    private Dictionary<string, Dictionary<int, float[]>> CollectAllRotations(out Dictionary<string, bool> rotationSetted) 
-    {
-        EditorCurveBinding[] curvesinfo = AnimationUtility.GetCurveBindings((AnimationClip)originAnimation.value);
-        Dictionary<string, Dictionary<int, float[]>> rotationskeys = new Dictionary<string, Dictionary<int, float[] >>();
-        rotationSetted = new Dictionary<string, bool>();
-        for (int i = 0; i < curvesinfo.Length; i++)
-        {
-            if (!rotationskeys.ContainsKey(curvesinfo[i].path))
-            { 
-                rotationskeys.Add(curvesinfo[i].path, new Dictionary<int, float[] >());
-                rotationSetted.Add(curvesinfo[i].path, false);
-            }
-            if (curvesinfo[i].propertyName == "m_LocalRotation.x" || curvesinfo[i].propertyName == "m_LocalRotation.y" || curvesinfo[i].propertyName == "m_LocalRotation.z" || curvesinfo[i].propertyName == "m_LocalRotation.w")
-            {
-                AnimationCurve animCurve = AnimationUtility.GetEditorCurve((AnimationClip)originAnimation.value, curvesinfo[i]);
-                if (curvesinfo[i].propertyName == "m_LocalRotation.x")
-                {
-                    AddAllKeysToArray(0, i,ref rotationskeys, curvesinfo, animCurve);
-                }
-                else if (curvesinfo[i].propertyName == "m_LocalRotation.y")
-                {
-                    AddAllKeysToArray(1, i, ref rotationskeys, curvesinfo, animCurve);
-
-                }
-                if (curvesinfo[i].propertyName == "m_LocalRotation.z")
-                {
-                    AddAllKeysToArray(2, i, ref rotationskeys, curvesinfo, animCurve);
-
-                }
-                if (curvesinfo[i].propertyName == "m_LocalRotation.w")
-                {
-                    AddAllKeysToArray(3, i, ref rotationskeys, curvesinfo, animCurve);
-
-                }
-            }
-        }
-        return rotationskeys;
-    }
-
-    private Quaternion ConvertArrayToQuaternion(Dictionary<string, Dictionary<int, float[]>> rotationskeys, string path, int index) 
-    {
-        Quaternion quat = new Quaternion(rotationskeys.GetValueOrDefault(path).GetValueOrDefault(0)[index],
-        rotationskeys.GetValueOrDefault(path).GetValueOrDefault(1)[index],
-        rotationskeys.GetValueOrDefault(path).GetValueOrDefault(2)[index],
-        rotationskeys.GetValueOrDefault(path).GetValueOrDefault(3)[index]);
-
-        return quat;
-    }
-
-    public void SetKeysValue(string previousPath, string destinyPath, ref AnimationCurve destinyCurve, AnimationCurve originCurve,float tPoseOrigin, float tPoseDestiny, int signo, bool isQuaternion = false, Dictionary<string, Dictionary<int, float[]>> originRotation = null, Dictionary<string, Dictionary<int, float[]>> destinyRotation = null, char rotationpos = 'x') 
-    {
-        if (isQuaternion)
-        {
-            for (int k = 0; k < originCurve.keys.Length; k++)
-            {
-                if(rotationpos == 'x')
-                    destinyCurve.AddKey(originCurve.keys[k].time, destinyRotation[destinyPath][0][k]);
-                if (rotationpos == 'y')
-                    destinyCurve.AddKey(originCurve.keys[k].time, destinyRotation[destinyPath][1][k]);
-                if (rotationpos == 'z')
-                    destinyCurve.AddKey(originCurve.keys[k].time, destinyRotation[destinyPath][2][k]);
-                if (rotationpos == 'w')
-                    destinyCurve.AddKey(originCurve.keys[k].time, destinyRotation[destinyPath][3][k]);
-            }
-        }
-        else 
-        {
             for (int k = 0; k < originCurve.keys.Length; k++)
             {
                 destinyCurve.AddKey(originCurve.keys[k].time, originCurve.keys[k].value * signo);
             }
-        }
-        
+
     }
-
-    private void SavePositions(string previousPath,string destinyPath, AnimationCurve originCurve, Quaternion tPoseOrigin, Quaternion tPoseDestiny, Dictionary<string, Dictionary<int, float[]>> originRotation, ref Dictionary<string, Dictionary<int, float[]>> destinyRotation)
-    {
-        if (!destinyRotation.ContainsKey(destinyPath))
-        {
-            destinyRotation.Add(destinyPath, new Dictionary<int, float[]>());
-        }
-
-        for (int i = 0; i < 4; i++)
-        {
-            int signo = 1;
-            float[] array = new float[originRotation[previousPath][i].Length];
-
-            for (int k = 0; k < originRotation[previousPath][i].Length; k++)
-            {
-                Quaternion quat = ConvertArrayToQuaternion(originRotation, previousPath, k);
-
-                float originAnimKey = 0;
-                if (i == 0) 
-                {
-                    signo = 1;
-                    originAnimKey = quat.x;
-                }
-                if (i == 1)
-                {
-                    signo = -1;
-                    originAnimKey = quat.y;
-                }
-                if (i == 2)
-                {
-                    signo = -1;
-                    originAnimKey = quat.z;
-                }
-                if (i == 3)
-                {
-                    signo = 1;
-                    originAnimKey = quat.w;
-                }
-
-
-                array[k] = originAnimKey * signo;
-            }
-            destinyRotation[destinyPath].Add(i, array);
-        }
-    }
-
 
 
     private void InvertAnimation()
     {
         EditorCurveBinding[] originInfo = AnimationUtility.GetCurveBindings((AnimationClip)originAnimation.value);
-        Dictionary<string, bool> rotationSaved;
-        Dictionary<string, Dictionary<int, float[]>> rotationOrigin = CollectAllRotations(out rotationSaved);
-        Dictionary<string, Dictionary<int, float[]>> rotationDestiny = new Dictionary<string, Dictionary<int, float[]>>();
+        
 
         AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(((AnimationClip)originAnimation.value));
         AnimationUtility.SetAnimationClipSettings((AnimationClip)destinyAnimation.value, settings);
 
         string previousPath = "";
-        int wcount = 0;
-        int xcount = 0;
         for (int i = 0; i < originInfo.Length; i++)
         {
             if (((GameObject)tpose.value).transform.Find(originInfo[i].path) != null)
@@ -246,53 +124,41 @@ public class AnimationMirrorWindow : EditorWindow
                 
                 if (originInfo[i].propertyName == "m_LocalPosition.x")
                 {
-                    SetKeysValue(previousPath, originInfo[i].path, ref destinyCurve, originCurve, ((GameObject)tpose.value).transform.Find(previousPath).localPosition.x, ((GameObject)tpose.value).transform.Find(originInfo[i].path).localPosition.x, -1);
+                    SetKeysValue(ref destinyCurve, originCurve, -1);
 
                 }
                 else if (originInfo[i].propertyName == "m_LocalPosition.y")
                 {
 
-                    SetKeysValue(previousPath, originInfo[i].path, ref destinyCurve, originCurve, ((GameObject)tpose.value).transform.Find(previousPath).localPosition.y, ((GameObject)tpose.value).transform.Find(originInfo[i].path).localPosition.y, 1);
+                    SetKeysValue(ref destinyCurve, originCurve, 1);
 
                 }
                 else if (originInfo[i].propertyName == "m_LocalPosition.z")
                 {
-                    SetKeysValue(previousPath, originInfo[i].path, ref destinyCurve, originCurve, ((GameObject)tpose.value).transform.Find(previousPath).localPosition.z, ((GameObject)tpose.value).transform.Find(originInfo[i].path).localPosition.z, 1);
+                    SetKeysValue(ref destinyCurve, originCurve,  1);
 
                 }
-                else if (originInfo[i].propertyName == "m_LocalRotation.x" 
-                      || originInfo[i].propertyName == "m_LocalRotation.y" 
-                      || originInfo[i].propertyName == "m_LocalRotation.z" 
-                      || originInfo[i].propertyName == "m_LocalRotation.w")
+                else if (originInfo[i].propertyName == "m_LocalRotation.x")
                 {
-                    if (!rotationSaved[previousPath]) 
-                    { 
-                        rotationSaved[previousPath] = true;
-                        SavePositions(previousPath, originInfo[i].path, originCurve, ((GameObject)tpose.value).transform.Find(previousPath).localRotation, ((GameObject)tpose.value).transform.Find(originInfo[i].path).localRotation, rotationOrigin, ref rotationDestiny);
-                    
-                    }
-
-                    if (originInfo[i].propertyName == "m_LocalRotation.x")
-                    {
-                        xcount++;
-                        SetKeysValue(previousPath, originInfo[i].path, ref destinyCurve, originCurve, 0, 0, -1, true, rotationOrigin, rotationDestiny,'x');
-                    }
-                    else if (originInfo[i].propertyName == "m_LocalRotation.y")
-                        SetKeysValue(previousPath, originInfo[i].path, ref destinyCurve, originCurve, 0, 0, -1, true, rotationOrigin, rotationDestiny, 'y');
-                    if (originInfo[i].propertyName == "m_LocalRotation.z")
-                        SetKeysValue(previousPath, originInfo[i].path, ref destinyCurve, originCurve, 0,0, -1, true, rotationOrigin, rotationDestiny, 'z');
-                    if (originInfo[i].propertyName == "m_LocalRotation.w")
-                    {
-                        wcount++;
-                        SetKeysValue(previousPath, originInfo[i].path, ref destinyCurve, originCurve,0,0, -1, true, rotationOrigin, rotationDestiny, 'w');
-                    }
-
+                    SetKeysValue(ref destinyCurve, originCurve,  1);
                 }
-                ((AnimationClip)destinyAnimation.value).SetCurve(originInfo[i].path, typeof(Transform), originInfo[i].propertyName, destinyCurve);
-
-            }//if
-        }//for
-    }
+                else if (originInfo[i].propertyName == "m_LocalRotation.y")
+                {
+                    SetKeysValue(ref destinyCurve, originCurve, -1);
+                }
+                else if (originInfo[i].propertyName == "m_LocalRotation.z")
+                { 
+                    SetKeysValue(ref destinyCurve, originCurve, -1);
+                }
+                else if (originInfo[i].propertyName == "m_LocalRotation.w")
+                {
+                    SetKeysValue(ref destinyCurve, originCurve, 1);
+                }
+            
+               ((AnimationClip)destinyAnimation.value).SetCurve(originInfo[i].path, typeof(Transform), originInfo[i].propertyName, destinyCurve);
+               }//if
+            }//for
+        }
 }
         
 
